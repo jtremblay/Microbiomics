@@ -605,7 +605,13 @@ stackedBarplotsFromTaxonomyTable <- function(
   if(scale != "normal" & scale != "log2" & scale != "log10"){
     stop("scale=<string> argument has to be set to either normal, log2 or log10")
   }
-
+  
+  if(!is.null(range)){
+    if(!is.vector(range)){ stop("range=<vector> argument has to be a vector of 2 elements. The two elements have to be greater than 0 and the second element has to be greater than the first." )  }
+    if(length(range) != 2){ stop("range=<vector> argument has to be a vector of 2 elements. The two elements have to be greater than 0 and the second element has to be greater than the first." )  }
+    if (!isTRUE(all(range == floor(range)))) stop("'range' must only contain integer values")
+  }
+  
   # Default colors
   vColors = c(
     "#0000CD", "#00FF00", "#FF0000", "#808080", "#000000", "#B22222", "#DAA520",
@@ -671,11 +677,19 @@ stackedBarplotsFromTaxonomyTable <- function(
     prefix = paste0(prefix, "minusExcluded")
   }
 
-  if(is.null(keep_most_n)){
+  if(!is.null(keep_most_n) && !is.null(range)){
+    stop("keep_most_n=int> and range=c(<posint>, <posint>) are mutually exclusive.")
+  }
+  
+  if(is.null(keep_most_n) && is.null(range)){
     #keep_most_n = nrow(tTaxonomy);
     keep_most_n = 20;
     if(verbose == 1){print(paste0("nrow(tTaxonomy):", nrow(tTaxonomy))); print(dim(tTaxonomy))}
+  }else if(is.null(keep_most_n) && !is.null(range)){
+    keep_most_n = range[2]
   }
+  #print("keep_most_n: ");print(keep_most_n); 
+  
   if(verbose == 1){print(head(tTaxonomy)); print(dim(tTaxonomy))}
   valid_rownames = colnames(tTaxonomy)[colnames(tTaxonomy) %in% row.names(mapping)]
   tTaxonomy = tTaxonomy[,c("Taxon", valid_rownames),drop=FALSE]
@@ -720,8 +734,10 @@ stackedBarplotsFromTaxonomyTable <- function(
   }
 
   if(!is.null(range)){
-    start = as.numeric(do.call(rbind, str_split(range, ":"))[,c(1)])
-    end = as.numeric(do.call(rbind, str_split(range, ":"))[,c(2)])
+    #start = as.numeric(do.call(rbind, str_split(range, ":"))[,c(1)])
+    #end = as.numeric(do.call(rbind, str_split(range, ":"))[,c(2)])
+    start = range[1]
+    end = range[2]
 
     if(start > nrow(tTaxonomy3)){
       stop(paste0("start position:", start, " is higher than number of rows of the tax table ", nrow(tTaxonomy3)))
@@ -1240,7 +1256,7 @@ stackedBarplotsFromTaxonomyTable <- function(
 #' @examples
 #' dataframe <- findDifferentialTaxaByAnova(...);
 #' @export data_frame
-findDifferentialTaxaByAnova <- function(mapping_file=NULL, mapping=NULL, taxonomy_file=NULL, variables=NULL){
+findDifferentialTaxaByAnova <- function(mapping_file=NULL, mapping=NULL, taxonomy_file=NULL, variables=NULL, convert_to_relative_abundance=FALSE){
 
   if(!is.null(mapping) & !is.null(mapping_file)){
     stop("You can only specified a mapping or a mapping_file, but not both.")
@@ -1269,6 +1285,11 @@ findDifferentialTaxaByAnova <- function(mapping_file=NULL, mapping=NULL, taxonom
 
   tTaxonomy = data.frame(fread(taxonomy_file, header=TRUE, sep="\t"), check.names=FALSE)
   tTaxonomy = tTaxonomy[,c("Taxon", mapping$sample_id)]
+  if(isTRUE(convert_to_relative_abundance)){
+    tTaxonomyPerc = prop.table(data.matrix(tTaxonomy[,2:ncol(tTaxonomy)]), margin=2)*100
+    tTaxonomyPerc = data.frame(Taxon=tTaxonomy$Taxon, tTaxonomyPerc, check.names=FALSE)
+    tTaxonomy = tTaxonomyPerc
+  }
   taxa = unique(tTaxonomy$Taxon)
 
   colname = names(variables)[1]

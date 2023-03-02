@@ -117,3 +117,58 @@ p_object_8 = stackedBarplotsFromTaxonomyTable(
 )
 print(p_object_8)
 
+# So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20?
+p_object_9 = stackedBarplotsFromTaxonomyTable(
+  mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
+  tax_level=tax_level,                                    pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
+  selected_taxa=NULL,                                     relative_abundance=TRUE,     keep_most_n=NULL,           remove_n=NULL,          show_borders=FALSE, 
+  order_bars_by_taxon=NULL,                               side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
+  prefix=NULL,                                            remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
+  defined_height=NULL,                                    show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
+  legend_ncol=1,                                          verbose=0,                   range=c(21,40)
+)
+print(p_object_9)
+
+# So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20?
+p_object_9 = stackedBarplotsFromTaxonomyTable(
+  mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
+  tax_level=tax_level,                                    pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
+  selected_taxa=NULL,                                     relative_abundance=TRUE,     keep_most_n=NULL,           remove_n=NULL,          show_borders=FALSE, 
+  order_bars_by_taxon=NULL,                               side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
+  prefix=NULL,                                            remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
+  defined_height=NULL,                                    show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
+  legend_ncol=1,                                          verbose=0,                   range=c(41,60)
+)
+print(p_object_9)
+
+
+# Okay that's all good for getting a global overview of the taxa profiles at stake.
+# Now let's extract the taxa that are significantly differentially abundant between conditions.
+anova_df = findDifferentialTaxaByAnova(mapping_file=mapping_file, mapping=NULL, taxonomy_file=taxonomy_file, variables=list("VisitCategory"=c("v3", "v2v4v5")), convert_to_relative_abundance=TRUE)
+# Let's select that comparions that had p-value<0.05
+anova_df2 = anova_df[anova_df$pvalue < 0.05,]
+anova_df2$ratio_m1_on_m2 = anova_df2$mean_1/anova_df2$mean_2
+anova_df2[grep("*g__Coprococcus", anova_df2$Taxa),]
+# Then select taxa that had ratio mean1/mean2 > 10 or mean2/mean1 < 1/10
+fc=4
+fc_rev = 1/fc
+anova_df3 = anova_df2[(anova_df2$mean_1/anova_df2$mean_2 >= fc) | (anova_df2$mean_1/anova_df2$mean_2 <= fc_rev), ]
+
+# Then lets replot the figure with only the selected taxa.
+p_object_10 = stackedBarplotsFromTaxonomyTable(
+  mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
+  tax_level=tax_level,                                    pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
+  selected_taxa=anova_df3$Taxa,                           relative_abundance=TRUE,     keep_most_n=20,           remove_n=NULL,          show_borders=FALSE, 
+  order_bars_by_taxon=NULL,                               side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
+  prefix=NULL,                                            remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
+  defined_height=NULL,                                    show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
+  legend_ncol=1,                                          verbose=0,                   range=NULL
+)
+print(p_object_10)
+
+# It's actually pretty neat. The microbiota was largely impacted at visit #3 which happened right after the antibiotic intake. 
+# These microbes could potentially be used as markers to detect a disrupted microbiota. 
+# Let's now generate a taxonomy abundance table with only these selected taxa.
+tax_df = data.frame(fread(taxonomy_file, header=T), check.names=F)
+tax_df = tax_df[tax_df$Taxon %in% anova_df3$Taxa,]
+write.table(tax_df, "./data/feature_table_final_normalized_L6_diffabun.tsv", quote=F, sep="\t", row.names=F)
