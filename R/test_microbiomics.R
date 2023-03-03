@@ -150,19 +150,19 @@ anova_df2 = anova_df[anova_df$pvalue < 0.05,]
 anova_df2$ratio_m1_on_m2 = anova_df2$mean_1/anova_df2$mean_2
 anova_df2[grep("*g__Coprococcus", anova_df2$Taxa),]
 # Then select taxa that had ratio mean1/mean2 > 10 or mean2/mean1 < 1/10
-fc=4
+fc=2
 fc_rev = 1/fc
 anova_df3 = anova_df2[(anova_df2$mean_1/anova_df2$mean_2 >= fc) | (anova_df2$mean_1/anova_df2$mean_2 <= fc_rev), ]
 
-# Then lets replot the figure with only the selected taxa.
+# Then lets replot the figure with only the selected taxa. #TODO always sort X axis by the most abundant taxa, by default
 p_object_10 = stackedBarplotsFromTaxonomyTable(
-  mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
-  tax_level=tax_level,                                    pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
-  selected_taxa=anova_df3$Taxa,                           relative_abundance=TRUE,     keep_most_n=20,           remove_n=NULL,          show_borders=FALSE, 
-  order_bars_by_taxon=NULL,                               side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
-  prefix=NULL,                                            remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
-  defined_height=NULL,                                    show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
-  legend_ncol=1,                                          verbose=0,                   range=NULL
+  mapping_file=mapping_file,                                mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
+  tax_level=tax_level,                                      pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
+  selected_taxa=anova_df3$Taxa,                             relative_abundance=TRUE,     keep_most_n=20,             remove_n=NULL,          show_borders=FALSE, 
+  order_bars_by_taxon=NULL, side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
+  prefix=NULL,                                              remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
+  defined_height=NULL,                                      show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
+  legend_ncol=1,                                            verbose=0,                   range=NULL,                 angle_strip_labels_x=0
 )
 print(p_object_10)
 
@@ -171,4 +171,23 @@ print(p_object_10)
 # Let's now generate a taxonomy abundance table with only these selected taxa.
 tax_df = data.frame(fread(taxonomy_file, header=T), check.names=F)
 tax_df = tax_df[tax_df$Taxon %in% anova_df3$Taxa,]
-write.table(tax_df, "./data/feature_table_final_normalized_L6_diffabun.tsv", quote=F, sep="\t", row.names=F)
+write.table(tax_df, "./data/feature_table_final_normalized_L6_diffabun_v2.tsv", quote=F, sep="\t", row.names=F)
+
+
+# A custom Naive Bayesian model gave the following taxa:
+selected_taxa = c(
+  "g__ClostridiaceaeFA",
+  "g__Coprococcus",
+  "g__Roseburia"
+)
+
+p_object_11 = stackedBarplotsFromTaxonomyTable(
+  mapping_file=mapping_file,                                mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
+  tax_level=tax_level,                                      pretty_display=TRUE,         by_average=FALSE,           summarize_lineage=TRUE, order_files=NULL, 
+  selected_taxa=selected_taxa,                              relative_abundance=TRUE,     keep_most_n=20,             remove_n=NULL,          show_borders=FALSE, 
+  order_bars_by_taxon=NULL,                                 side_by_side=FALSE,          type="16S_amplicons",       png=FALSE,              pdf=FALSE, 
+  prefix=NULL,                                              remove_legend=FALSE,         pretty_display_showx=FALSE, exclude_string=NULL,    defined_width=NULL,
+  defined_height=NULL,                                      show_samples_on_labels=NULL, specific_color_list=NULL,   sample_order=NULL,      legend_pos="right",
+  legend_ncol=1,                                            verbose=0,                   range=NULL,                 angle_strip_labels_x=0
+)
+print(p_object_11)

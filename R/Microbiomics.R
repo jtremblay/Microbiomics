@@ -548,9 +548,21 @@ stackedBarplotsFromTaxonomyTable <- function(
                                         type="shotgun_metagenomics", png=FALSE, pdf=FALSE, range=NULL, prefix=NULL, remove_legend=FALSE, pretty_display_showx=FALSE,
                                         exclude_string=NULL, defined_width=NULL, defined_height=NULL, show_samples_on_labels=NULL, show_borders=TRUE,
                                         order_bars_by_taxon=NULL, specific_color_list=NULL, specific_palette=NULL, sample_order=NULL, legend_pos="right",
-                                        legend_ncol=1, verbose=0, specific_order=NULL, angleX=90, scale="normal"){
+                                        legend_ncol=1, verbose=0, specific_order=NULL, angleX=90, scale="normal", angle_strip_labels_x=90, angle_strip_labels_y=0){
 
   # validate options. Exit if mutually exclusive options.
+  if(!is.null(angle_strip_labels_x)){
+    if(angle_strip_labels_x != 0 & angle_strip_labels_x != 45 & angle_strip_labels_x != 90){
+      stop("angle_strip_labels_x=<int> has to be one of the three following values: 0, 45 or 90")
+    }
+  }
+  
+  if(!is.null(angle_strip_labels_y)){
+    if(angle_strip_labels_y != 0 & angle_strip_labels_y != 45 & angle_strip_labels_y != 90){
+      stop("angle_strip_labels_y=<int> has to be one of the three following values: 0, 45 or 90")
+    }
+  }
+  
   if(length(facets) > 2 | length(facets) == 0){
     stop("Only 1 or 2 facets can be specified.")
   }
@@ -813,20 +825,24 @@ stackedBarplotsFromTaxonomyTable <- function(
       colnames(df2)[1] = "variable2"
       prefix2 = facets[1]
 
-      if(!is.null(order_bars_by_taxon)){
-        df_sorted_taxon = df2 %>%
-          group_by(Taxon, variable2) %>%
-          dplyr::summarise(total=sum(value)) %>%
-          as.data.frame()
-
-        if(!order_bars_by_taxon %in% as.character(df_sorted_taxon$Taxon)){
-          stop(paste0(order_bars_by_taxon, " was not found in the input data..."))
-        }
-        df_sorted_taxon = df_sorted_taxon[df_sorted_taxon$Taxon == order_bars_by_taxon,]
-        sorted_variables = df_sorted_taxon[order(-df_sorted_taxon$total),]$variable2
-        df2$variable2 = factor(df2$variable2, levels=sorted_variables)
-        #print("ordered by :"); print(head(df2));
+      #######################
+      # Order bars by taxon #
+      #######################
+      df_sorted_taxon = df2 %>%
+        group_by(Taxon, variable2) %>%
+        dplyr::summarise(total=sum(value)) %>%
+        as.data.frame()
+    
+      if(is.null(order_bars_by_taxon)){
+        order_bars_by_taxon = tTaxonomy3$Taxon[1]
       }
+      if(!order_bars_by_taxon %in% as.character(df_sorted_taxon$Taxon)){
+        stop(paste0(order_bars_by_taxon, " was not found in the input data..."))
+      }
+      df_sorted_taxon = df_sorted_taxon[df_sorted_taxon$Taxon == order_bars_by_taxon,]
+      sorted_variables = df_sorted_taxon[order(-df_sorted_taxon$total),]$variable2
+      df2$variable2 = factor(df2$variable2, levels=sorted_variables)
+      
       number_of_x_bars = length(unique(df2$variable2))
       specs = getImageSpecsBarplot(df2, facets[1], number_of_x_bars=number_of_x_bars)
 
@@ -867,30 +883,31 @@ stackedBarplotsFromTaxonomyTable <- function(
         # Here, my first attempt was to order by the first Y facet (facets[1]) of each X facet (facets[2])
         # but it creates problems if there are missing samples in one of the y facets...
         sorted_variables_based_on_taxa_order = c("")
-        if(!is.null(order_bars_by_taxon)){
-          facets2_variables = unique(df2[[ facets[2] ]])
-          variables2 =  unique(df2$variables2)
-          for(n in 1:length(facets2_variables)){
-            df2_tmp = df2[df2[[ facets[2] ]] == facets2_variables[n],]
-
-            df_sorted_taxon = df2_tmp %>%
-              group_by(Taxon, variable2) %>%
-              dplyr::summarise(total=sum(value)) %>%
-              as.data.frame()
-
-            if(!order_bars_by_taxon %in% as.character(df_sorted_taxon$Taxon)){
-              stop(paste0(order_bars_by_taxon, " was not found in the input data..."))
-            }
-            # TODO add an argument allowing to chose on which Y (facets[1]) facet to sort by the selected taxa.
-            # for the moment only sort based on the first Y facet using variable2.
-            df_sorted_taxon = df_sorted_taxon[df_sorted_taxon$Taxon == order_bars_by_taxon,]
-            print(head(df_sorted_taxon))
-            sorted_variables = as.character(df_sorted_taxon[order(-df_sorted_taxon$total),]$variable2)
-            print(sorted_variables)
-            sorted_variables_based_on_taxa_order = c(sorted_variables_based_on_taxa_order, sorted_variables)
-          }
-          df2$variable2 = factor(df2$variable2, levels=sorted_variables_based_on_taxa_order)
+        if(is.null(order_bars_by_taxon)){
+          order_bars_by_taxon = tTaxonomy3$Taxon[1]
         }
+        facets2_variables = unique(df2[[ facets[2] ]])
+        variables2 =  unique(df2$variables2)
+        for(n in 1:length(facets2_variables)){
+          df2_tmp = df2[df2[[ facets[2] ]] == facets2_variables[n],]
+          df_sorted_taxon = df2_tmp %>%
+            group_by(Taxon, variable2) %>%
+            dplyr::summarise(total=sum(value)) %>%
+            as.data.frame()
+
+          if(!order_bars_by_taxon %in% as.character(df_sorted_taxon$Taxon)){
+            stop(paste0(order_bars_by_taxon, " was not found in the input data..."))
+          }
+          # TODO add an argument allowing to chose on which Y (facets[1]) facet to sort by the selected taxa.
+          # for the moment only sort based on the first Y facet using variable2.
+          df_sorted_taxon = df_sorted_taxon[df_sorted_taxon$Taxon == order_bars_by_taxon,]
+          print(head(df_sorted_taxon))
+          sorted_variables = as.character(df_sorted_taxon[order(-df_sorted_taxon$total),]$variable2)
+          print(sorted_variables)
+          sorted_variables_based_on_taxa_order = c(sorted_variables_based_on_taxa_order, sorted_variables)
+        }
+        df2$variable2 = factor(df2$variable2, levels=sorted_variables_based_on_taxa_order)
+        #}
 
         if(verbose == 1){
           print("checkpoint-1")
@@ -1123,6 +1140,12 @@ stackedBarplotsFromTaxonomyTable <- function(
     #print("ordered by 2:"); print(sorted_variables);
     #df2$variable2 = factor(df2$variable2, levels=sorted_variables)
     .e <- environment()
+    if(is.null(angle_strip_labels_x)){
+      angle_strip_labels_x = specs$angleX
+    }
+    if(is.null(angle_strip_labels_y)){
+      angle_strip_labels_y = specs$angleY
+    }
     p <- ggplot(environment=.e, data=df2, aes(x=variable2, y=value, fill=Taxon)) +
       xlab("") +
       theme(
@@ -1140,15 +1163,15 @@ stackedBarplotsFromTaxonomyTable <- function(
         legend.title = element_text(size=(specs$legendFontSize+1), face="bold"),
         legend.spacing = unit(1, "cm"),
         legend.position=legend_pos,
-        #strip.text.x = element_text(angle=angleX, hjust=0.5, vjust=0, size=specs$stripFontSizeX, face="bold"),
-        strip.text.y = element_text(angle=specs$angleY, hjust=specs$hjustY, size=specs$stripFontSizeY, face="bold"),
+        strip.text.x = element_text(angle=angle_strip_labels_x, hjust=0.5, vjust=0, size=specs$stripFontSizeX, face="bold"),
+        strip.text.y = element_text(angle=angle_strip_labels_y, hjust=specs$hjustY, size=specs$stripFontSizeY, face="bold"),
         strip.background =  element_blank()
       )
 
-    if(angleX != 0){
-      p = p + theme(strip.text.x = element_text(angle=angleX, hjust=0, vjust=0.5, size=specs$stripFontSizeX, face="bold"))
+    if(angle_strip_labels_x != 0 & angle_strip_labels_x != 45){
+      p = p + theme(strip.text.x = element_text(angle=angle_strip_labels_x, hjust=0, vjust=0.5, size=specs$stripFontSizeX, face="bold"))
     }else{
-      p = p + theme(strip.text.x = element_text(angle=angleX, hjust=0.5, vjust=0, size=specs$stripFontSizeX, face="bold"))
+      p = p + theme(strip.text.x = element_text(angle=angle_strip_labels_x, hjust=0.5, vjust=0, size=specs$stripFontSizeX, face="bold"))
     }
 
     if(relative_abundance == TRUE){scale_y_continuous()}else{scale_y_continuous(labels=fancy_scientific)}
@@ -1191,12 +1214,12 @@ stackedBarplotsFromTaxonomyTable <- function(
 
     if(pretty_display == FALSE){
       if(by_average == FALSE){
-        p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
+        p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
       }else{
-        p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
+        p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
       }
     }else if(pretty_display == TRUE & pretty_display_showx == TRUE){
-      p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
+      p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
     }else if(pretty_display == TRUE & pretty_display_showx == FALSE){
       p = p + theme(axis.text.x=element_text(size=0, colour="black", angle=as.numeric(90), hjust=1))
     }
