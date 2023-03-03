@@ -17,7 +17,7 @@ outdir = "./output"
 
 Before starting, lets have a look at the mapping_file.tsv
 ```
-#SampleID   Groups  Gender  Treatment   Date        Visit
+#SampleID    Groups  Gender  Treatment   Date        Visit
 #2v2.A       A       Female  v2.A        2014-01-12  v2
 #2v3.A       A       Female  v3.A        2014-01-20  v3
 #2v4.A       A       Female  v4.A        2014-01-28  v4
