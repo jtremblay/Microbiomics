@@ -19,16 +19,14 @@ library(reshape2)
 
 #' Load mapping file
 #'
-#' Takes a text .tsv format mapping file and loads in into a data.frame.
+#'
 #' @param file_path to mapping file in .tsv format.
-#' @return A data frame for which the row.names is the #SampleID column.
+#' @return A data frame for which the row.names is the first column of the supplied .tsv file.
 #' @examples
-#' mapping <- loadMappingFile(mapping_file);
+#' mapping = loadMappingFile(mapping_file);
 #' @export data_frame
 loadMappingFile <- function(mapping_file){
   mapping = data.frame(fread(mapping_file, sep="\t", colClasses = "character", header=TRUE), check.names=FALSE)
-  #header = read.table(mapping_file, sep="\t", nrows=1, comment.char="", check.names=FALSE)
-  #colnames(mapping) = header
   row.names(mapping) = mapping[,1]
   colnames(mapping)[1] = "sample_id"
 
@@ -40,11 +38,10 @@ loadMappingFile <- function(mapping_file){
 
 #' validateDataFrame
 #'
-#' Make sure that data frame does not contain any illegal values.
 #' @param data_frame
-#' @return  Nothing. If data frame is offensive, will call stop()
+#' @return  Nothing. If data frame is offensive, will call stop(). Tolerated character in the input data.frame are: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.,_-
 #' @examples
-#' mapping <- validateDataFrame(mapping);
+#' mapping = validateDataFrame(mapping);
 #' @export data_frame
 validateDataFrame <- function(data_frame){
   tolerated_characters = unlist(strsplit("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.,_-", ""))
@@ -53,7 +50,6 @@ validateDataFrame <- function(data_frame){
   lapply(colnames(data_frame), function(x){
     y = unlist(strsplit(x, ""))
     res = !y %in% tolerated_characters
-    #print(res)
     if(isTRUE(any(res))){
       stop("The headers in your mapping file contain other characters than alpha numeric and '.', ',', '_' and '-'\nThe headers in your mapping file contains the following values:", paste(colnames(data_frame), collapse="  "))
     }
@@ -65,17 +61,14 @@ validateDataFrame <- function(data_frame){
 
 #' Add repetition variable to mapping data frame based on a specific variable (i.e. column).
 #'
-#' Make sure that data frame does not contain any illegal values.
-#' @param data_frame, string
+#' @param data_frame input mapping data.frame
+#' @param string column name of that exists in input mapping data.frame
 #' @return The mapping data frame specified in input, but with replicate values integrated in a new column labeled Rep.
 #' @examples
-#' mapping_with_reps <- addRepsToMapping(mapping, a_variable_name);
+#' mapping_with_reps = addRepsToMapping(mapping, a_variable)
 #' @export data_frame
-#'
 addRepsToMapping <- function(curr_mapping, curr_variable){
   # Generacilly add replicates
-  #curr_mapping = mapping
-  #curr_variable = "Treatment"
 
   curr_mapping = curr_mapping[order(curr_mapping[[curr_variable]]), , drop=FALSE]
   treatments = curr_mapping[[curr_variable]]
@@ -107,21 +100,19 @@ addRepsToMapping <- function(curr_mapping, curr_variable){
   return(tmp2)
 }
 
-#' #' Add repetition variable to mapping data frame based two specific variable (i.e. columns).
+#' Add repetition variable to mapping data frame based  on two variables (i.e. columns).
 #'
-#' Make sure that data frame does not contain any illegal values.
-#' @param data_frame
-#' @return  The mapping data frame specified in input, but with replicate values integrated in a new column labeled Rep.
+#'
+#' @param data_frame mapping (metadata) data.frame
+#' @param facet1 variable to use in x facets
+#' @param facet2 variable to use in y facets
+#' @return  The mapping data frame specified in input, but with an additional column containing a unique identifier based on the facet1 and facet2 variables.
 #' @examples
-#' mapping <- addRepsToMappingTwoVariables(mapping);
+#' mapping_with_reps = addRepsToMapping(mapping, a_variable, another_variable)
 #' @export data_frame
 #'
 addRepsToMappingTwoVariables <- function(curr_mapping, facet1, facet2){
   # Generically add replicates
-  #curr_mapping = mapping
-  #(Y, X)
-  #facet1 = "Visit"
-  #facet2 = "GoodResponder"
 
   curr_mapping$Rep = NULL
   curr_mapping = curr_mapping[order(curr_mapping[[facet2]]), , drop=FALSE]
@@ -170,13 +161,13 @@ addRepsToMappingTwoVariables <- function(curr_mapping, facet1, facet2){
   return(final_df)
 }
 
-#' processTaxonomicLineages
+#' Takes a data.frame and a boolean value (summarize_lineage=<boolean>). If summarize_lineage=TRUE, the taxonomy column in the data.frame will
+#' be shorten to include only certain taxa.
 #'
-#' Make sure that data frame does not contain any illegal values.
-#' @param data_frame
+#' @param data_frame, boolean
 #' @return  data_frame
 #' @examples
-#' data_frame_with_processed_taxa_lineages <- processTaxonomicLineages(data_frame, summarize_lineages=TRUE/FALSE);
+#' data_frame_with_processed_taxa_lineages = processTaxonomicLineages(data_frame, summarize_lineages=TRUE/FALSE);
 #' @export data_frame
 #'
 # Here artifically populate rows
@@ -186,10 +177,9 @@ processTaxonomicLineages <- function(tTaxonomy3, summarize_lineage){
   }
 
   tTaxonomy3$TMP_ID = seq(1,nrow(tTaxonomy3),1)
-   for(p in 1:nrow(tTaxonomy3)){
+  for(p in 1:nrow(tTaxonomy3)){
     y = strsplit(tTaxonomy3[[ "Taxon" ]][p], ";", fixed=TRUE)[[1]]
 
-    #if(tax_level == "L7" | tax_level == "L6"){
     if(length(y) < 2){
       y[2] = "p__unknown"; y[3] = "c__unknown"; y[4] = "o__unknown"; y[5] = "f__unknown"; y[6] = "g__unknown"; y[7] = "s__unknown";
 
@@ -213,7 +203,7 @@ processTaxonomicLineages <- function(tTaxonomy3, summarize_lineage){
     }
 
     if(p == 1){
-      tmp_df = data.frame(y)#, check.names=FALSE)
+      tmp_df = data.frame(y)
       tmp_df = t(tmp_df)
       row.names(tmp_df) = tTaxonomy3[p ,c("TMP_ID")]
 
@@ -241,7 +231,6 @@ processTaxonomicLineages <- function(tTaxonomy3, summarize_lineage){
       tmp_taxons = y2[,1,drop=FALSE]
       tmp_taxons = data.frame(TMP_ID=row.names(y2), paste0(y2[,1]))
     }else if(tax_level == "L7"){
-      #stop(paste0("Cannot use L7 (species) taxonomy with amplicon data."))
       tmp_taxons = data.frame(TMP_ID=row.names(y2), paste0(y2[,4], ";", y2[,6], ";", y2[,7]))
     }
     tmp_taxons = data.frame(tmp_taxons)
@@ -261,14 +250,12 @@ processTaxonomicLineages <- function(tTaxonomy3, summarize_lineage){
 }
 
 
-#' fancyScientific
-#'
 #' Converts numbers to formatted scientific numbers.
 #'
 #' @param data_frame
-#' @return Converts huges numbers to scientific notation.
+#' @return Converts huge numbers to scientific notation.
 #' @examples
-#' vectorOFformattedNumbers <- fancyScientific(vectorOfNumbers);
+#' vectorOFformattedNumbers = fancyScientific(vectorOfNumbers);
 #' @export object
 fancy_scientific <- function(l) {
   # turn in to character string in scientific notation
@@ -285,8 +272,6 @@ fancy_scientific <- function(l) {
 }
 
 
-#' getImageSpecsBarplot
-#'
 #' Given a data frame object, this function will return suggested dimensions to use for axes font sizes and figure dimensions.
 #'
 #' @param data_frame
@@ -472,10 +457,20 @@ getImageSpecsBarplot <- function(df, xVariable, yVariable=NULL, pretty_display=T
 #'
 #'
 #'
-#' @param data_frame
-#' @return  An object containing the ggplot object, summarized taxonomy table.
+#' @param file taxonomic summary file in tsv format.
+#' @param data_frame taxonomic summary in a data.frame format.
+#' @param variables if a vector of variables (i.e. names of the mapping or mapping_file column) is specified, will return the most abundant taxa based on these variables.
+#' @param mapping mapping (i.e. metadata) data.frame
+#' @param mapping_file mapping_file in .tsv format. First rows = sample ids
+#' @param first integer value
+#' @param last integer value
+#' @return  A list. list(taxa=vector_or_most_abundant_taxa, taxa_table=taxonomy_table_data_frame, mapping=mapping_data_frame)
 #' @examples
-#' plotObject <- plotTaxonFromTaxonomyTable(...);
+#' plotObject = getMostAbundantTaxa(...);
+#' You have to specify at least one of the taxonomy_file=<filepath> or taxonomy_df=<data_frame> arguments.
+#' You can only specify either mapping=<data_frame> or mapping_file=<filepath>, but not both.
+#' first=<int> has to be smaller than last=<int>
+#' if variables=<list> is specified, at least mapping=<data_frame> or mapping_file=<file> must be specified.
 #' @export data_frame
 getMostAbundantTaxa <- function(taxonomy_file=NULL, taxonomy_df=NULL, variables=NULL, mapping=NULL, mapping_file=NULL, first=1, last=20){
 
@@ -536,19 +531,57 @@ getMostAbundantTaxa <- function(taxonomy_file=NULL, taxonomy_df=NULL, variables=
 #' Takes taxonomy tax table in input (i.e. Legacy Qiime format - text file in .tsv format).
 #' Either provide a selected genus values or will print 20 most abundant genus by default.
 #'
-#' @param data_frame
+#' @param mapping_file default=NULL. A .tsv file in which row names (except header) matches with colnames of taxonomy_file
+#' @param mapping default=NULL. A data.frame obtained from loadMapping(mapping_file) function. mapping and mapping_file are mutually exclusive.
+#' @param taxonomy_file default=NULL. A .tsv taxonomic summary file.
+#' @param outdir default=NULL. The output directory where figures will be writte.
+#' @param order_files default=NULL. Simple text file containing one value per facet included in the facets=c("variable/column1"," "variable/column2")
+#' @param custom_order default=NULL. A vector containing all variablles of a column in the mapping file of each corresponding facets.
+#' @param tax_level default="L6". Taxonomic depth to use to generate figures. L1=kingdom;L2=Phylym;L3=Class;L4=Order;L5=Family;L6=Genus;L7=Species
+#' @param selected_genuses default=
+#' @param relative_abundance default=FALSE
+#' @param keep_most_n default=NULL
+#' @param remove_n default=NULL
+#' @param side_by_side default=FALSE
+#' @param facets default=NULL
+#' @param pretty_display default=TRUE
+#' @param by_average default=FALSE
+#' @param summarize_lineage default=TRUE
+#' @param type default="metagenomics"
+#' @param png default=FALSE
+#' @param pdf default=FALSE
+#' @param range default=NULL
+#' @param prefix default=NULL
+#' @param remove_legend default=FALSE
+#' @param pretty_display_showx default=FALSE
+#' @param exclude_string default=NULL
+#' @param defined_width default=NULL
+#' @param defined_height default=NULL
+#' @param show_samples_on_labels default=NULL
+#' @param show_borders default=TRUE
+#' @param order_bars_by_taxon default=NULL
+#' @param specific_color_list default=NULL
+#' @param specific_palette default=NULL
+#' @param sample_order default=NULL
+#' @param legend_pos default="right"
+#' @param legend_ncol default=1
+#' @param verbose default=0
+#' @param specific_order default=NULL
+#' @param angle_strip_labels_x=0 default=90
+#' @param angle_strip_labels_y=0 default=90
+#' @param scale default="normal
 #' @return  An object containing the ggplot object, summarized taxonomy table.
 #' @examples
 #' plotObject <- plotTaxonFromTaxonomyTable(...);
 #' @export data_frame
 stackedBarplotsFromTaxonomyTable <- function(
-                                        mapping_file=NULL, mapping=NULL, taxonomy_file=NULL, outdir=NULL, order_files=NULL, custom_order=NULL, tax_level="L6",
-                                        selected_taxa=NULL, relative_abundance=FALSE, keep_most_n=NULL, remove_n=NULL,
-                                        side_by_side=FALSE, facets=NULL, pretty_display=TRUE, by_average=FALSE, summarize_lineage=TRUE,
-                                        type="shotgun_metagenomics", png=FALSE, pdf=FALSE, range=NULL, prefix=NULL, remove_legend=FALSE, pretty_display_showx=FALSE,
-                                        exclude_string=NULL, defined_width=NULL, defined_height=NULL, show_samples_on_labels=NULL, show_borders=TRUE,
-                                        order_bars_by_taxon=NULL, specific_color_list=NULL, specific_palette=NULL, sample_order=NULL, legend_pos="right",
-                                        legend_ncol=1, verbose=0, specific_order=NULL, angleX=90, scale="normal", angle_strip_labels_x=90, angle_strip_labels_y=0){
+    mapping_file=NULL, mapping=NULL, taxonomy_file=NULL, outdir=NULL, order_files=NULL, custom_order=NULL, tax_level="L6",
+    selected_taxa=NULL, relative_abundance=FALSE, keep_most_n=NULL, remove_n=NULL,
+    side_by_side=FALSE, facets=NULL, pretty_display=TRUE, by_average=FALSE, summarize_lineage=TRUE,
+    type="shotgun_metagenomics", png=FALSE, pdf=FALSE, range=NULL, prefix=NULL, remove_legend=FALSE, pretty_display_showx=FALSE,
+    exclude_string=NULL, defined_width=NULL, defined_height=NULL, show_samples_on_labels=NULL, show_borders=TRUE,
+    order_bars_by_taxon=NULL, specific_color_list=NULL, specific_palette=NULL, sample_order=NULL, legend_pos="right",
+    legend_ncol=1, verbose=0, specific_order=NULL, angleX=90, scale="normal", angle_strip_labels_x=90, angle_strip_labels_y=0){
 
   # validate options. Exit if mutually exclusive options.
   if(!is.null(angle_strip_labels_x)){
@@ -556,13 +589,13 @@ stackedBarplotsFromTaxonomyTable <- function(
       stop("angle_strip_labels_x=<int> has to be one of the three following values: 0, 45 or 90")
     }
   }
-  
+
   if(!is.null(angle_strip_labels_y)){
     if(angle_strip_labels_y != 0 & angle_strip_labels_y != 45 & angle_strip_labels_y != 90){
       stop("angle_strip_labels_y=<int> has to be one of the three following values: 0, 45 or 90")
     }
   }
-  
+
   if(length(facets) > 2 | length(facets) == 0){
     stop("Only 1 or 2 facets can be specified.")
   }
@@ -617,13 +650,13 @@ stackedBarplotsFromTaxonomyTable <- function(
   if(scale != "normal" & scale != "log2" & scale != "log10"){
     stop("scale=<string> argument has to be set to either normal, log2 or log10")
   }
-  
+
   if(!is.null(range)){
     if(!is.vector(range)){ stop("range=<vector> argument has to be a vector of 2 elements. The two elements have to be greater than 0 and the second element has to be greater than the first." )  }
     if(length(range) != 2){ stop("range=<vector> argument has to be a vector of 2 elements. The two elements have to be greater than 0 and the second element has to be greater than the first." )  }
     if (!isTRUE(all(range == floor(range)))) stop("'range' must only contain integer values")
   }
-  
+
   # Default colors
   vColors = c(
     "#0000CD", "#00FF00", "#FF0000", "#808080", "#000000", "#B22222", "#DAA520",
@@ -692,7 +725,7 @@ stackedBarplotsFromTaxonomyTable <- function(
   if(!is.null(keep_most_n) && !is.null(range)){
     stop("keep_most_n=int> and range=c(<posint>, <posint>) are mutually exclusive.")
   }
-  
+
   if(is.null(keep_most_n) && is.null(range)){
     #keep_most_n = nrow(tTaxonomy);
     keep_most_n = 20;
@@ -700,8 +733,8 @@ stackedBarplotsFromTaxonomyTable <- function(
   }else if(is.null(keep_most_n) && !is.null(range)){
     keep_most_n = range[2]
   }
-  #print("keep_most_n: ");print(keep_most_n); 
-  
+  #print("keep_most_n: ");print(keep_most_n);
+
   if(verbose == 1){print(head(tTaxonomy)); print(dim(tTaxonomy))}
   valid_rownames = colnames(tTaxonomy)[colnames(tTaxonomy) %in% row.names(mapping)]
   tTaxonomy = tTaxonomy[,c("Taxon", valid_rownames),drop=FALSE]
@@ -832,7 +865,7 @@ stackedBarplotsFromTaxonomyTable <- function(
         group_by(Taxon, variable2) %>%
         dplyr::summarise(total=sum(value)) %>%
         as.data.frame()
-    
+
       if(is.null(order_bars_by_taxon)){
         order_bars_by_taxon = tTaxonomy3$Taxon[1]
       }
@@ -842,7 +875,7 @@ stackedBarplotsFromTaxonomyTable <- function(
       df_sorted_taxon = df_sorted_taxon[df_sorted_taxon$Taxon == order_bars_by_taxon,]
       sorted_variables = df_sorted_taxon[order(-df_sorted_taxon$total),]$variable2
       df2$variable2 = factor(df2$variable2, levels=sorted_variables)
-      
+
       number_of_x_bars = length(unique(df2$variable2))
       specs = getImageSpecsBarplot(df2, facets[1], number_of_x_bars=number_of_x_bars)
 
@@ -1214,12 +1247,12 @@ stackedBarplotsFromTaxonomyTable <- function(
 
     if(pretty_display == FALSE){
       if(by_average == FALSE){
-        p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
+        p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
       }else{
-        p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
+        p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
       }
     }else if(pretty_display == TRUE & pretty_display_showx == TRUE){
-      p = p + theme(axis.text.x=element_text(size=angle_strip_labels_x, colour="black", angle=as.numeric(90), hjust=1))
+      p = p + theme(axis.text.x=element_text(size=specs$fontSizeX, colour="black", angle=as.numeric(90), hjust=1))
     }else if(pretty_display == TRUE & pretty_display_showx == FALSE){
       p = p + theme(axis.text.x=element_text(size=0, colour="black", angle=as.numeric(90), hjust=1))
     }
@@ -1342,6 +1375,7 @@ findDifferentialTaxaByAnova <- function(mapping_file=NULL, mapping=NULL, taxonom
   anova_df$BH = p.adjust(anova_df$pvalue, method = "BH")
   return(anova_df)
 }
+
 
 #' Using KO and COG aggregated summary matrix files along with what variable to compare, this function returns a data frame with
 #' evalues and BH for each comparison of each KO.
