@@ -79,7 +79,7 @@ print(p_object_2)
 ![Figure 2](./images/Rplot01.png)
 *Figure 2*
 
-Which is a little better. We can also simplify the taxonomic lineages a bit with the summarize_lineage=TRUE argument.
+Which is a little better. We can also show the complete taxonomic lineages with the summarize_lineage=FALSE argument.
 ```
 p_object_3 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file, mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
