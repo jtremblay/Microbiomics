@@ -61,7 +61,7 @@ p_object_1 = stackedBarplotsFromTaxonomyTable(
 print(p_object_1)
 ```
 ![Figure 1](./images/Rplot.png)
-*Figure 1
+*Figure 1*
 
 First, we can convert the raw counts to % values to make profiles of each sample easier to compare.
 ```
@@ -77,7 +77,7 @@ p_object_2 = stackedBarplotsFromTaxonomyTable(
 print(p_object_2)
 ```
 ![Figure 2](./images/Rplot01.png)
-*Figure 2
+*Figure 2*
 
 Which is a little better. We can also simplify the taxonomic lineages a bit with the summarize_lineage=TRUE argument.
 ```
@@ -93,7 +93,7 @@ p_object_3 = stackedBarplotsFromTaxonomyTable(
 print(p_object_3)
 ```
 ![Figure 3](./images/Rplot02.png)
-*Figure 3
+*Figure 3*
 
 We should also order the barplot by the abundance of a taxon. By default, the panels are sorted by the most abundant taxa which here is o__Clostridiales;g__Blautia.
 But say we'd like to order the plots by "o__Clostridiales;g__Coprococcus":
@@ -110,7 +110,7 @@ p_object_4 = stackedBarplotsFromTaxonomyTable(
 print(p_object_4)
 ```
 ![Figure 4](./images/Rplot03.png)
-*Figure 4
+*Figure 4*
 
 We may then want to focus on certain taxa. Say we would want to show only g__Coproccus, o__Enterobacteriales:Others and g__Prevotella
 ```
@@ -126,7 +126,7 @@ p_object_5 = stackedBarplotsFromTaxonomyTable(
 print(p_object_5)
 ```
 ![Figure 5](./images/Rplot04.png)
-*Figure 5
+*Figure 5*
 
 That's already more interesting. We can also split by groups (individuals who received the probiotic and the ones that did not).
 In that case we would include : facets=c("Visit", "Groups")
@@ -143,7 +143,7 @@ p_object_6 = stackedBarplotsFromTaxonomyTable(
 print(p_object_6)
 ```
 ![Figure 6](./images/Rplot05.png)
-*Figure 6
+*Figure 6*
 
 Which is nice, but we should remove the empty space with pretty_display=TRUE
 ```
@@ -159,7 +159,7 @@ p_object_7 = stackedBarplotsFromTaxonomyTable(
 print(p_object_7)
 ```
 ![Figure 7](./images/Rplot06.png)
-*Figure 7
+*Figure 7*
 
 So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20 (range=c(21,40))? We'll go back to a single facet (facets=c("Visit"))
 ```
@@ -175,6 +175,7 @@ p_object_8 = stackedBarplotsFromTaxonomyTable(
 print(p_object_8)
 ```
 ![Figure 8](./images/Rplot07.png)
+*Figure 8*
 
 So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20?
 ```
@@ -190,7 +191,7 @@ p_object_9 = stackedBarplotsFromTaxonomyTable(
 print(p_object_9)
 ```
 ![Figure 9](./images/Rplot08.png)
-*Figure 9
+*Figure 9*
 
 Okay that's all good for getting a global overview of the taxa profiles at stake.
 Now let's extract the taxa that are significantly differentially abundant between conditions.
@@ -225,7 +226,7 @@ p_object_10 = stackedBarplotsFromTaxonomyTable(
 print(p_object_10)
 ```
 ![Figure 10](./images/Rplot09.png)
-*Figure 10
+*Figure 10*
 
 It's actually pretty neat. The microbiota was largely impacted at visit #3 which happened right after the antibiotic intake.
 These microbes could potentially be used as markers to detect a disrupted microbiota.
@@ -254,4 +255,4 @@ p_object_11 = stackedBarplotsFromTaxonomyTable(
 print(p_object_11)
 ```
 ![Figure 11](./images/Rplot10.png)
-*Figure 11
+*Figure 11*
