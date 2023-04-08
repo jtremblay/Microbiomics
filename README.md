@@ -98,7 +98,8 @@ print(p_object_3)
 *Figure 3*
 
 We should also order the barplot by the abundance of a taxon. By default, the panels are sorted by the most abundant taxa which for this current dataset, is o__Clostridiales;g__Blautia.
-But say we'd like to order the plots by "o__Clostridiales;g__Coprococcus", we can include the following parameter: ```order_bars_by_taxon="o__Clostridiales;g__Coprococcus"```:
+But say we'd like to order the plots by "o__Clostridiales;g__Coprococcus", we can include the following parameter: ```order_bars_by_taxon="o__Clostridiales;g__Coprococcus"```. Here we'll also
+revert back to the option ```summarize_lineage=TRUE```:
 ```
 p_object_4 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,         facets=c("Visit"),
