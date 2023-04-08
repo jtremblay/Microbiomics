@@ -23,6 +23,7 @@ Before starting, lets have a look at the mapping_file.tsv
 #2v4.A       A       Female  v4.A        2014-01-28  v4
 #2v5.A       A       Female  v5.A        2014-02-03  v5
 #4v2.A       A       Female  v2.A        2014-01-12  v2
+...
 ```
 and the taxonomic summary file:
 ```
@@ -36,6 +37,7 @@ and the taxonomic summary file:
 #k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__ClostridialesOR;g__ClostridialesOR            196.0   328.0   258.4   501.1   297.0   613.8  ...
 #k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Dehalobacteriaceae;g__DehalobacteriaceaeFA    0.6     0.6     0.6     0.6     0.6     10.7   ...
 #k__Bacteria;p__Firmicutes;c__Clostridia;o__Clostridiales;f__Dehalobacteriaceae;g__Dehalobacterium         3.9     6.1     3.9     3.9     3.9     5.5    ...
+...
 ```
 
 Let's start by generating a stacked barplot of all samples. The ```stackedBarplotsFromTaxonomyTable()``` function will return a ggplot object.
@@ -43,9 +45,8 @@ The following options are mutually exclusive ```mapping_file=<path_to_file>```, 
 One of the important options of ```stackedBarplotsFromTaxonomyTable()``` and the figure generating functions in the Microbiomics package in
 general is the ```facets=c("variable1")``` or ```facets=c("variable1", "variable2")``` parameter. If we only specify a 1-element vector, the figure
 will be divided in panels along the X-axis. For instance, for the following line, if we specify ```facets=c("Visit")```, we'll obtain the
-following figure which will plot the read counts of each taxa of each sample:
-
-Let's also specify that we want all the plots to be generated to up to the genus level
+following figure which will plot the read counts of each taxa of each sample. For this figure, we'll also specify that we want all the plots to be 
+generated to up to the genus level with ```tax_level="L<1-6>" option.
 ```
 tax_level = "L6"
 
@@ -63,7 +64,7 @@ print(p_object_1)
 ![Figure 1](./images/Rplot.png)
 *Figure 1*
 
-First, we can convert the raw counts to % values to make profiles of each sample easier to compare.
+Here we have a figure, but not much can be said about it. First, we can convert the raw counts to % values to make taxonomic profiles of each sample easier to compare.
 ```
 p_object_2 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file, mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
@@ -79,7 +80,8 @@ print(p_object_2)
 ![Figure 2](./images/Rplot01.png)
 *Figure 2*
 
-Which is a little better. We can also show the complete taxonomic lineages with the summarize_lineage=FALSE argument.
+Which is a little better as we now have all the samples leveled on the same baseline which makes it easier to compare one another. We can also show the complete 
+taxonomic lineages with the ```summarize_lineage=FALSE``` argument.
 ```
 p_object_3 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file, mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
@@ -95,8 +97,8 @@ print(p_object_3)
 ![Figure 3](./images/Rplot02.png)
 *Figure 3*
 
-We should also order the barplot by the abundance of a taxon. By default, the panels are sorted by the most abundant taxa which here is o__Clostridiales;g__Blautia.
-But say we'd like to order the plots by "o__Clostridiales;g__Coprococcus":
+We should also order the barplot by the abundance of a taxon. By default, the panels are sorted by the most abundant taxa which for this current dataset, is o__Clostridiales;g__Blautia.
+But say we'd like to order the plots by "o__Clostridiales;g__Coprococcus", we can include the following parameter: ```order_bars_by_taxon="o__Clostridiales;g__Coprococcus"```:
 ```
 p_object_4 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,                              mapping=NULL,                taxonomy_file,              outdir=outdir,         facets=c("Visit"),
@@ -112,7 +114,7 @@ print(p_object_4)
 ![Figure 4](./images/Rplot03.png)
 *Figure 4*
 
-We may then want to focus on certain taxa. Say we would want to show only g__Coproccus, o__Enterobacteriales:Others and g__Prevotella
+We may then want to focus on certain selected taxa only. Say we would want to show only g__Coproccus, o__Enterobacteriales:Others and g__Prevotella, we can include the following parameter: ```selected_taxa=c("g__Coprococcus", "o__Enterobacteriales", "g__Prevotella")```:
 ```
 p_object_5 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,                                                  mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
@@ -128,8 +130,8 @@ print(p_object_5)
 ![Figure 5](./images/Rplot04.png)
 *Figure 5*
 
-That's already more interesting. We can also split by groups (individuals who received the probiotic and the ones that did not).
-In that case we would include : facets=c("Visit", "Groups")
+That's already more interesting. We can also split by groups (individuals who received the probiotic and the ones who did not).
+In that case we would include the following parameter: ```facets=c("Visit", "Groups")```
 ```
 p_object_6 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,                                                  mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Groups", "Visit"),
@@ -145,7 +147,7 @@ print(p_object_6)
 ![Figure 6](./images/Rplot05.png)
 *Figure 6*
 
-Which is nice, but we should remove the empty space with pretty_display=TRUE
+Which is nice, but we should remove the empty space on the x-axis of each panel with the ```pretty_display=TRUE``` parameter:
 ```
 p_object_7 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,                                                  mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Groups", "Visit"),
@@ -161,7 +163,8 @@ print(p_object_7)
 ![Figure 7](./images/Rplot06.png)
 *Figure 7*
 
-So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20 (range=c(21,40))? We'll go back to a single facet (facets=c("Visit"))
+So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20 (range=c(21,40))? 
+We'll go back to a single facet (```facets=c("Visit")```) and include the option ``` range=c(21,40)``` to show the 21st to 40th most abundant taxa.
 ```
 p_object_8 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,  mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
@@ -177,7 +180,7 @@ print(p_object_8)
 ![Figure 8](./images/Rplot07.png)
 *Figure 8*
 
-So all of this is great, but so far we've only considered the most 20 abundant taxa, but what about the next following 20?
+And what about the next following 20? ``` range=c(41,60)```
 ```
 p_object_9 = stackedBarplotsFromTaxonomyTable(
   mapping_file=mapping_file,   mapping=NULL,                taxonomy_file,              outdir=outdir,          facets=c("Visit"),
@@ -193,8 +196,8 @@ print(p_object_9)
 ![Figure 9](./images/Rplot08.png)
 *Figure 9*
 
-Okay that's all good for getting a global overview of the taxa profiles at stake.
-Now let's extract the taxa that are significantly differentially abundant between conditions.
+That's all good for getting a global overview of the taxa profiles at stake.
+Now let's extract the taxa that are significantly differentially abundant between conditions, by doing pairwaise anovas for each taxon.
 ```
 anova_df = findDifferentialTaxaByAnova(
   mapping_file=mapping_file,                         mapping=NULL,                       taxonomy_file=taxonomy_file,
@@ -237,7 +240,7 @@ tax_df = tax_df[tax_df$Taxon %in% anova_df3$Taxa,]
 write.table(tax_df, "./data/feature_table_final_normalized_L6_diffabun_v1.tsv", quote=F, sep="\t", row.names=F)
 ```
 
-We can then focus on certain taxa and plot the bars side-by-side (side_by_side=TRUE) with standard deviation instead of stacked barplots:
+We can then focus on certain taxa and plot the bars side-by-side (```side_by_side=TRUE```) with standard deviation instead of stacked barplots:
 ```
 selected_taxa = c(
   "o__Enterobacteriales"
